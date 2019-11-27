@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
 import { OAuthService, AuthConfig, NullValidationHandler, JwksValidationHandler } from 'angular-oauth2-oidc';
 // import { JwksValidationHandler } from 'angular-oauth2-oidc';
 import { Router } from '@angular/router';
-import { filter, delay } from 'rxjs/operators';
+import { filter, delay, tap } from 'rxjs/operators';
 import { of, race } from 'rxjs';
 import { authCodeFlowConfig } from './auth-code-flow.config';
 
@@ -28,6 +28,10 @@ export class AppComponent {
     // Automatically load user profile
     this.oauthService.events
       .pipe(filter(e => e.type === 'token_received'))
+      .pipe(tap(() => {
+        const state = this.oauthService.state;
+        console.log({ state });
+      }))
       .subscribe(_ => {
         this.oauthService.loadUserProfile();
       });

@@ -40,8 +40,12 @@ export class HomeComponent implements OnInit {
       await this.oauthService.loadDiscoveryDocument();
       sessionStorage.setItem('flow', 'code');
   
-      this.oauthService.initLoginFlow('/some-state;p1=1;p2=2');
-       // the parameter here is optional. It's passed around and can be used after logging in
+      const wfeProxyState = {
+        'source_redirect_url': 'http://localhost:4200/index.html',
+        'authorize_url': this.oauthService.loginUrl
+      };
+      this.oauthService.loginUrl = 'http://localhost:53660/openidconnect/forward';
+      this.oauthService.initLoginFlow(JSON.stringify(wfeProxyState));
   }
 
   logout() {
