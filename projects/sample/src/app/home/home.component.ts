@@ -45,7 +45,9 @@ export class HomeComponent implements OnInit {
         'authorize_url': this.oauthService.loginUrl
       };
       this.oauthService.loginUrl = 'http://localhost:53660/openidconnect/forward';
-      this.oauthService.initLoginFlow(JSON.stringify(wfeProxyState));
+      this.oauthService.initLoginFlow(JSON.stringify(wfeProxyState), {
+        response_mode: 'query'
+      });
   }
 
   logout() {
