@@ -17,7 +17,7 @@ import { authCodeFlowConfig } from './auth-code-flow.config';
 })
 export class AppComponent {
   constructor(private router: Router, private oauthService: OAuthService) {
-    
+
     // Remember the selected configuration
     if (sessionStorage.getItem('flow') === 'code') {
       this.configureCodeFlow();
@@ -69,7 +69,8 @@ export class AppComponent {
     this.oauthService.configure(authConfig);
     // this.oauthService.setStorage(localStorage);
     this.oauthService.tokenValidationHandler = new JwksValidationHandler();
-    this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    // todo: figure out what changes are required to WFE proxy to support state checks so that we don't have to disable it here
+    this.oauthService.loadDiscoveryDocumentAndTryLogin({ disableOAuth2StateCheck: true });
 
 
     // Optional
