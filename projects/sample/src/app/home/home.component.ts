@@ -41,9 +41,10 @@ export class HomeComponent implements OnInit {
       sessionStorage.setItem('flow', 'code');
   
       const wfeProxyState = {
-        'source_redirect_url': 'http://localhost:4200/index.html',
+        'source_redirect_url': this.oauthService.redirectUri,
         'authorize_url': this.oauthService.loginUrl
       };
+      // todo: retrieve url this from configuration
       this.oauthService.loginUrl = 'http://localhost:53660/openidconnect/forward';
       this.oauthService.initLoginFlow(JSON.stringify(wfeProxyState), {
         response_mode: 'query'

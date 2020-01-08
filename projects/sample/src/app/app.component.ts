@@ -38,11 +38,26 @@ export class AppComponent {
 
   }
 
+  private setProxyRedirectUrl() {
+    const redirectUriMatch = location.href.match(/[&\?]redirect_uri=([^&\$]*)/);
+    if (!redirectUriMatch) { return; }
+
+    const redirectUri = redirectUriMatch[1];
+    const href = location.href
+      .replace(/[&\?]redirect_uri=[^&\$]*/, '');
+    history.replaceState(null, window.name, href);
+
+    this.oauthService.redirectUri = decodeURIComponent(redirectUri);
+  }
+
   private configureCodeFlow() {
 
     this.oauthService.configure(authCodeFlowConfig);
     this.oauthService.tokenValidationHandler = new JwksValidationHandler();
-    this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    // this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    this.oauthService.loadDiscoveryDocument()
+      .then(_ => this.setProxyRedirectUrl())
+      .then(() => this.oauthService.tryLogin());
 
     // Optional
     // this.oauthService.setupAutomaticSilentRefresh();
