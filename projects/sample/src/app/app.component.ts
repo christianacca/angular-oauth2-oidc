@@ -43,11 +43,14 @@ export class AppComponent {
     if (!redirectUriMatch) { return; }
 
     const redirectUri = redirectUriMatch[1];
-    const href = location.href
-      .replace(/[&\?]redirect_uri=[^&\$]*/, '');
-    history.replaceState(null, window.name, href);
-
     this.oauthService.redirectUri = decodeURIComponent(redirectUri);
+  }
+
+  private stripWfeProxyParams() {
+    const href = location.href
+      .replace(/[&\?]redirect_uri=[^&\$]*/, '')
+      .replace(/[&\?]\$mri_clientid_hint=[^&\$]*/, '');
+    history.replaceState(null, window.name, href);
   }
 
   private configureCodeFlow() {
@@ -57,6 +60,7 @@ export class AppComponent {
     // this.oauthService.loadDiscoveryDocumentAndTryLogin();
     this.oauthService.loadDiscoveryDocument()
       .then(_ => this.setProxyRedirectUrl())
+      .then(() => this.stripWfeProxyParams())
       .then(() => this.oauthService.tryLogin());
 
     // Optional
