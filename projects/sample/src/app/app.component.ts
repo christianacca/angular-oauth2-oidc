@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
 import { OAuthService, AuthConfig, NullValidationHandler, JwksValidationHandler } from 'angular-oauth2-oidc';
 // import { JwksValidationHandler } from 'angular-oauth2-oidc';
 import { Router } from '@angular/router';
-import { filter, delay } from 'rxjs/operators';
+import { filter, delay, tap } from 'rxjs/operators';
 import { of, race } from 'rxjs';
 import { authCodeFlowConfig } from './auth-code-flow.config';
 
@@ -17,7 +17,7 @@ import { authCodeFlowConfig } from './auth-code-flow.config';
 })
 export class AppComponent {
   constructor(private router: Router, private oauthService: OAuthService) {
-    
+
     // Remember the selected configuration
     if (sessionStorage.getItem('flow') === 'code') {
       this.configureCodeFlow();
@@ -28,17 +28,40 @@ export class AppComponent {
     // Automatically load user profile
     this.oauthService.events
       .pipe(filter(e => e.type === 'token_received'))
+      .pipe(tap(() => {
+        const state = this.oauthService.state;
+        console.log({ state });
+      }))
       .subscribe(_ => {
         this.oauthService.loadUserProfile();
       });
 
   }
 
+  private setProxyRedirectUrl() {
+    const redirectUriMatch = location.href.match(/[&\?]redirect_uri=([^&\$]*)/);
+    if (!redirectUriMatch) { return; }
+
+    const redirectUri = redirectUriMatch[1];
+    this.oauthService.redirectUri = decodeURIComponent(redirectUri);
+  }
+
+  private stripWfeProxyParams() {
+    const href = location.href
+      .replace(/[&\?]redirect_uri=[^&\$]*/, '')
+      .replace(/[&\?]\$mri_clientid_hint=[^&\$]*/, '');
+    history.replaceState(null, window.name, href);
+  }
+
   private configureCodeFlow() {
 
     this.oauthService.configure(authCodeFlowConfig);
     this.oauthService.tokenValidationHandler = new JwksValidationHandler();
-    this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    // this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    this.oauthService.loadDiscoveryDocument()
+      .then(_ => this.setProxyRedirectUrl())
+      .then(() => this.stripWfeProxyParams())
+      .then(() => this.oauthService.tryLogin());
 
     // Optional
     // this.oauthService.setupAutomaticSilentRefresh();
@@ -50,7 +73,8 @@ export class AppComponent {
     this.oauthService.configure(authConfig);
     // this.oauthService.setStorage(localStorage);
     this.oauthService.tokenValidationHandler = new JwksValidationHandler();
-    this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    // todo: figure out what changes are required to WFE proxy to support state checks so that we don't have to disable it here
+    this.oauthService.loadDiscoveryDocumentAndTryLogin({ disableOAuth2StateCheck: true });
 
 
     // Optional
